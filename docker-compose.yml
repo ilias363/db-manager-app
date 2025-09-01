@@ -1,0 +1,87 @@
+services:
+  primary-db:
+    image: mysql:latest
+    container_name: primary-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PRIMARY_DB_PASSWORD}
+      MYSQL_DATABASE: ${PRIMARY_DB_NAME}
+      MYSQL_PASSWORD: ${PRIMARY_DB_PASSWORD}
+      MYSQL_TCP_PORT: ${PRIMARY_DB_PORT:-3306}
+    ports:
+      - "${PRIMARY_DB_HOST_PORT:-3307}:${PRIMARY_DB_PORT:-3306}"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${PRIMARY_DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-net
+    volumes:
+      - primary-db-data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./db-management-be
+      dockerfile: Dockerfile
+    container_name: backend
+    depends_on:
+      primary-db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SPRING_DATASOURCE_URL: ${PRIMARY_DB_URL}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${PRIMARY_DB_PASSWORD}
+      APP_DATASOURCE_URL: ${TARGET_DB_URL}
+      APP_DATASOURCE_USERNAME: ${TARGET_DB_USERNAME}
+      APP_DATASOURCE_PASSWORD: ${TARGET_DB_PASSWORD}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS}
+      APP_CORS_ALLOWED_METHODS: ${APP_CORS_ALLOWED_METHODS}
+      APP_CORS_ALLOWED_HEADERS: ${APP_CORS_ALLOWED_HEADERS}
+      APP_CORS_ALLOW_CREDENTIALS: ${APP_CORS_ALLOW_CREDENTIALS}
+      APP_CORS_MAX_AGE: ${APP_CORS_MAX_AGE}
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_JWT_EXPIRATION: ${APP_JWT_EXPIRATION}
+      APP_JWT_REFRESH_EXPIRATION: ${APP_JWT_REFRESH_EXPIRATION}
+      TZ: ${TZ}
+    expose:
+      - "8080"
+    networks:
+      - app-net
+
+  frontend:
+    build:
+      context: ./db-management-fe
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: frontend
+    env_file: .env
+    depends_on:
+      - backend
+    expose:
+      - "3000"
+    networks:
+      - app-net
+
+  nginx:
+    image: nginx:1.29-alpine
+    container_name: nginx
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  primary-db-data:
+    driver: local
