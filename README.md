@@ -40,9 +40,9 @@ git clone https://github.com/ilias363/db-management-fe.git
 ```
 
 ### 2. Create Environment File
-Copy the provided `env.example` file to `.env` at the repository root (next to `docker-compose.yml`) and fill in the required values as needed:
+Copy the provided `.env.example` file to `.env` at the repository root (next to `docker-compose.yml`) and fill in the required values as needed:
 ```
-cp env.example .env
+cp .env.example .env
 ```
 
 ### 3. Build & Run
