@@ -44,6 +44,7 @@ services:
       APP_JWT_SECRET: ${APP_JWT_SECRET}
       APP_JWT_EXPIRATION: ${APP_JWT_EXPIRATION}
       APP_JWT_REFRESH_EXPIRATION: ${APP_JWT_REFRESH_EXPIRATION}
+      JAVA_OPTS: ${JAVA_OPTS}
       TZ: ${TZ}
     expose:
       - "8080"
@@ -54,12 +55,12 @@ services:
     build:
       context: ./db-management-fe
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: frontend
     env_file: .env
     depends_on:
       - backend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     expose:
       - "3000"
     networks:
