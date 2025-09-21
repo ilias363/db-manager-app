@@ -53,7 +53,7 @@ docker compose up -d
 
 ### 4. Access
 - Application (UI): http://localhost
-- Backend (exposed via proxy rules): http://localhost/api
+- Backend (exposed via proxy rules): http://localhost/be/api
 - MySQL (host): 127.0.0.1:3307 (user: root / password: $PRIMARY_DB_PASSWORD)
 
 ### 5. Logs & Lifecycle
